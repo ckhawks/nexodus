@@ -18,27 +18,30 @@ export default function LoginComponent() {
     <form action={loginAction}>
       {state?.message && (
         <p aria-live="polite">
-          <Alert variant='danger' style={{fontSize: '0.9rem'}}>
+          <Alert variant="danger" style={{ fontSize: "0.9rem" }}>
             {state?.message}
           </Alert>
         </p>
       )}
       <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
         <Form.Label>Email address</Form.Label>
-        <Form.Control type="email" name="email" placeholder=""  />
+        <Form.Control type="email" name="email" placeholder="" />
       </Form.Group>
       <Form.Group className="mb-3" controlId="exampleForm.ControlInput2">
         <Form.Label>Password</Form.Label>
-        <Form.Control type="password" name="password" placeholder=""  />
+        <Form.Control type="password" name="password" placeholder="" />
       </Form.Group>
       <br />
-      <div className={styles['login-buttons']}>
+      <div className={styles["login-buttons"]}>
+        <Link
+          href="/register"
+          className={`${styles["button"]} ${styles["button-secondary"]}`}
+        >
+          Register
+        </Link>
         <button type="submit" className={styles["button"]}>
           {/* <FontAwesomeIcon icon={faPlus} />  */} Login
         </button>
-        <Link href="/register" className={`${styles["button"]} ${styles['button-secondary']}`}>
-          Register
-        </Link>
       </div>
     </form>
   );

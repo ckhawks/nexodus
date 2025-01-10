@@ -21,35 +21,12 @@ export default async function LoginPage() {
       <main className={`${styles.main} ${styles.narrow}`}>
         <div className={styles.description}>
           <Link href="/">
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <FontAwesomeIcon
-                icon={faHeart}
-                style={{ color: "#E26F6F", fontSize: "2rem" }}
-              />
-            </div>
-
-            <h1>Trackers</h1>
+            <h1>Nexodus</h1>
+            <br />
           </Link>
-          <p className={styles.subtext}>
-            You&apos;re making progress; track it!
-          </p>
         </div>
-        <div
-          className={`${styles.row} ${styles.content}`}
-          style={{ marginTop: "24px" }}
-        ></div>
 
-        <section>
-          {!session && <LoginComponent />}
-
-          {/* {session && (
-        <form action={logout}>
-          <button type="submit">Logout</button>
-        </form>
-      )} */}
-
-          {/* <pre>Session: {JSON.stringify(session, null, 2)}</pre> */}
-        </section>
+        <section>{!session && <LoginComponent />}</section>
       </main>
     </div>
   );

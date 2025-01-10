@@ -18,35 +18,34 @@ export default function RegisterComponent() {
     <form action={registerAction}>
       {state?.message && (
         <p aria-live="polite">
-          <Alert variant='danger' style={{fontSize: '0.9rem'}}>
+          <Alert variant="danger" style={{ fontSize: "0.9rem" }}>
             {state?.message}
           </Alert>
         </p>
       )}
       <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
         <Form.Label>Username</Form.Label>
-        <Form.Control type="name" name="username" placeholder=""  />
+        <Form.Control type="name" name="username" placeholder="" />
       </Form.Group>
       <Form.Group className="mb-3" controlId="exampleForm.ControlInput2">
         <Form.Label>Email address</Form.Label>
-        <Form.Control type="email" name="email" placeholder=""  />
+        <Form.Control type="email" name="email" placeholder="" />
       </Form.Group>
       <Form.Group className="mb-3" controlId="exampleForm.ControlInput3">
         <Form.Label>Password</Form.Label>
-        <Form.Control type="password" name="password" placeholder=""  />
-      </Form.Group>
-      <Form.Group className="mb-3" controlId="exampleForm.ControlInput4">
-        <Form.Label>Access Code</Form.Label>
-        <Form.Control type="name" name="access_code" placeholder=""  />
+        <Form.Control type="password" name="password" placeholder="" />
       </Form.Group>
       <br />
-      <div className={styles['login-buttons']}>
+      <div className={styles["login-buttons"]}>
+        <Link
+          href="/login"
+          className={`${styles["button"]} ${styles["button-secondary"]}`}
+        >
+          Login
+        </Link>
         <button type="submit" className={styles["button"]}>
           {/* <FontAwesomeIcon icon={faPlus} />  */} Register
         </button>
-        <Link href="/login" className={`${styles["button"]} ${styles['button-secondary']}`}>
-          Login
-        </Link>
       </div>
     </form>
   );
