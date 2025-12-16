@@ -1,20 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useInventory } from "@/context/InventoryContext";
 import ResourceDispenser from "./Harvester";
 import ResourceInventory from "./ResourceInventory";
 
 export default function ResourcesSection() {
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const handleDispenseComplete = () => {
-    // Trigger inventory refresh by updating the state
-    setRefreshTrigger((prev) => prev + 1);
-  };
+  const { refreshTrigger, triggerRefresh } = useInventory();
 
   return (
     <>
-      <ResourceDispenser onHarvestComplete={handleDispenseComplete} />
+      {/* <ResourceDispenser onHarvestComplete={triggerRefresh} /> */}
       <ResourceInventory refreshTrigger={refreshTrigger} />
     </>
   );

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 
 import "./globals.scss";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { InventoryProvider } from "@/context/InventoryContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +21,9 @@ export default function RootLayout({
     <html lang="en">
       <link rel="icon" href="/favicon.ico" sizes="any" />
       <body className={inter.className}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <InventoryProvider>{children}</InventoryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -5,6 +5,7 @@
   padding: 24px;
   max-width: 400px;
   transition: border-color 0.2s ease;
+  height: fit-content;
 
   &:hover {
     border-color: var(--border-hover);
@@ -28,10 +29,6 @@
   justify-content: center;
   flex-shrink: 0;
   transition: transform 0.3s ease;
-
-  &.dispensingIcon {
-    animation: spin 1s linear infinite;
-  }
 }
 
 @keyframes spin {
@@ -41,6 +38,10 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.dispensingIcon {
+  animation: spin 1s linear infinite;
 }
 
 .icon {

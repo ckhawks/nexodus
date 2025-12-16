@@ -6,7 +6,8 @@ import {
   index,
   integer,
   text,
-  decimal,
+  uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -54,9 +55,7 @@ export const userInventories = pgTable(
     resource_type_id: uuid("resource_type_id")
       .notNull()
       .references(() => resourceTypes.id, { onDelete: "cascade" }),
-    quantity: decimal("quantity", { precision: 20, scale: 2 })
-      .notNull()
-      .default("0"),
+    quantity: integer("quantity").notNull().default(0),
     updated_at: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => ({
@@ -118,6 +117,147 @@ export const generatorCooldownsRelations = relations(
     user: one(users, {
       fields: [generatorCooldowns.user_id],
       references: [users.id],
+    }),
+  })
+);
+
+/**
+ * Building Types - defines all available buildings in the game
+ */
+export const buildingTypes = pgTable("building_types", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  display_name: varchar("display_name", { length: 100 }).notNull(),
+  description: text("description"),
+  icon: varchar("icon", { length: 50 }), // Lucide icon name
+  tier: integer("tier").notNull().default(1), // 0-5 for progression
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+/**
+ * Building Costs - many-to-many: what resources are required to purchase a building
+ */
+export const buildingCosts = pgTable(
+  "building_costs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    building_type_id: uuid("building_type_id")
+      .notNull()
+      .references(() => buildingTypes.id, { onDelete: "cascade" }),
+    resource_type_id: uuid("resource_type_id")
+      .notNull()
+      .references(() => resourceTypes.id, { onDelete: "cascade" }),
+    quantity: integer("quantity").notNull(),
+    created_at: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    buildingResourceUnique: uniqueIndex("idx_building_cost_unique").on(
+      table.building_type_id,
+      table.resource_type_id
+    ),
+  })
+);
+
+/**
+ * Building Production - many-to-many: what resources a building produces
+ */
+export const buildingProduction = pgTable(
+  "building_production",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    building_type_id: uuid("building_type_id")
+      .notNull()
+      .references(() => buildingTypes.id, { onDelete: "cascade" }),
+    resource_type_id: uuid("resource_type_id")
+      .notNull()
+      .references(() => resourceTypes.id, { onDelete: "cascade" }),
+    rate_per_minute: integer("rate_per_minute").notNull(), // resources per minute
+    storage_capacity: integer("storage_capacity").notNull().default(100), // max before stopping production
+    created_at: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    buildingResourceIdx: index("idx_building_production").on(
+      table.building_type_id,
+      table.resource_type_id
+    ),
+  })
+);
+
+/**
+ * User Buildings - tracks which buildings a user owns
+ */
+export const userBuildings = pgTable(
+  "user_buildings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    user_id: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    building_type_id: uuid("building_type_id")
+      .notNull()
+      .references(() => buildingTypes.id, { onDelete: "cascade" }),
+    level: integer("level").notNull().default(1), // for future upgrades
+    last_collection_at: timestamp("last_collection_at").notNull(), // used to calculate production
+    created_at: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userBuildingIdx: index("idx_user_building").on(
+      table.user_id,
+      table.building_type_id
+    ),
+  })
+);
+
+/**
+ * Relations for buildings
+ */
+export const buildingTypesRelations = relations(
+  buildingTypes,
+  ({ many }) => ({
+    costs: many(buildingCosts),
+    production: many(buildingProduction),
+    userBuildings: many(userBuildings),
+  })
+);
+
+export const buildingCostsRelations = relations(
+  buildingCosts,
+  ({ one }) => ({
+    buildingType: one(buildingTypes, {
+      fields: [buildingCosts.building_type_id],
+      references: [buildingTypes.id],
+    }),
+    resourceType: one(resourceTypes, {
+      fields: [buildingCosts.resource_type_id],
+      references: [resourceTypes.id],
+    }),
+  })
+);
+
+export const buildingProductionRelations = relations(
+  buildingProduction,
+  ({ one }) => ({
+    buildingType: one(buildingTypes, {
+      fields: [buildingProduction.building_type_id],
+      references: [buildingTypes.id],
+    }),
+    resourceType: one(resourceTypes, {
+      fields: [buildingProduction.resource_type_id],
+      references: [resourceTypes.id],
+    }),
+  })
+);
+
+export const userBuildingsRelations = relations(
+  userBuildings,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userBuildings.user_id],
+      references: [users.id],
+    }),
+    buildingType: one(buildingTypes, {
+      fields: [userBuildings.building_type_id],
+      references: [buildingTypes.id],
     }),
   })
 );

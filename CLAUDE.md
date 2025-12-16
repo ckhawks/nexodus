@@ -2,46 +2,28 @@
 
 Tips and patterns learned while building Nexodus.
 
-## File Organization
-
-When adding documentation, guides, or educational content, create a dedicated folder:
-
-```
-guides/
-├── ARCHITECTURE.md       # System design and patterns
-├── DATABASE.md          # Database schema and queries
-├── AUTHENTICATION.md    # Auth flow and session management
-└── DEPLOYMENT.md        # Production deployment steps
-```
-
-This keeps the root directory clean and makes it easy to find learning materials without cluttering API documentation.
-
 ## Drizzle ORM Tips
 
-### Schema Changes Generate Migrations Automatically
+### Migrations: Use `db:generate` + `db:push`
 
-After modifying `src/db/schema.ts`, just run:
 ```bash
-npm run db:generate
+npm run db:generate  # Creates SQL diff
+npm run db:push      # Applies to database
 ```
 
-Drizzle Kit creates a SQL migration file that's safe to version control and deploy.
+**Don't use `db:migrate`** in development after running `db:push` - it replays all migrations and fails on existing tables.
 
-### Use Query Helpers for Reusable Operations
+### Query Helpers
 
-Instead of importing Drizzle in every file, create helpers in `src/db/queries.ts`:
-
+Create reusable functions in `src/db/queries.ts`:
 ```typescript
 export async function getUserByEmail(email: string) {
   return await db.select().from(users).where(eq(users.email, email)).limit(1);
 }
 ```
 
-Then import the helper in your auth code. This centralizes logic and makes refactoring easier.
+### Relations for Type-Safe Joins
 
-### Relations Enable Type-Safe Joins
-
-Define relations in your schema:
 ```typescript
 export const trackersRelations = relations(trackers, ({ one, many }) => ({
   user: one(users, { fields: [trackers.userId], references: [users.id] }),
@@ -49,7 +31,17 @@ export const trackersRelations = relations(trackers, ({ one, many }) => ({
 }));
 ```
 
-This enables Drizzle to provide autocomplete for related queries.
+### CRITICAL: Always Use `eq()` for WHERE Clauses
+
+```typescript
+// WRONG - Returns boolean, no filtering!
+.where((bt) => bt.name === "stone_quarry")
+
+// CORRECT
+.where(eq(buildingTypes.name, "stone_quarry"))
+```
+
+Arrow functions in `.where()` return booleans, not SQL. Drizzle treats truthy booleans as "no WHERE" clause, selecting ALL rows. This caused the building seeding to assign all costs/production to the first building (Resource Dispenser).
 
 ## Authentication Patterns
 
@@ -63,61 +55,28 @@ if (!secretKey) {
 }
 ```
 
-### Session Validation Strategy
+### Session Validation
 
-**Efficient User Existence Checks:**
-
-When validating sessions, use lightweight queries that only check user existence by ID, not full user records:
-
-```typescript
-// Good: Only queries the ID column
-const decrypted = await decrypt(session);
-if (decrypted?.user?.id) {
-  const userExists = await userExistsById(decrypted.user.id);
-  if (!userExists) {
-    (await cookies()).set("session", "", { expires: new Date(0) });
-    return null;
-  }
-}
-
-// Bad: Fetches entire user record including password hash
-const userExists = await getUserByEmail(decrypted.user.email);
-```
-
-**Why this matters:**
-- The JWT already contains user information (id, username, email)
-- Session validation happens on every authenticated request
-- Fetching full user records (especially with password hashes) is expensive
-- An ID-only query (`SELECT id FROM users WHERE id = ?`) is much faster
-
-**Implementation:**
-
-Create a lightweight query helper in `src/db/queries.ts`:
-
+Check user existence by ID only (JWT already has user data):
 ```typescript
 export async function userExistsById(userId: string): Promise<boolean> {
-  const result = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
+  const result = await db.select({ id: users.id }).from(users)
+    .where(eq(users.id, userId)).limit(1);
   return result.length > 0;
 }
 ```
 
-This prevents orphaned sessions for deleted accounts while minimizing database overhead.
+Prevents orphaned sessions from deleted accounts efficiently.
 
 ### Wrap Auth Operations in Try-Catch
-
-Database errors should be caught gracefully:
 
 ```typescript
 export async function register(prevState, formData) {
   try {
-    // ... registration logic
+    // registration logic
   } catch (error) {
     console.error("Registration error:", error);
-    return { message: "An error occurred during registration. Please try again." };
+    return { message: "An error occurred during registration." };
   }
 }
 ```
@@ -126,339 +85,98 @@ export async function register(prevState, formData) {
 
 ### Use Native HTML Over UI Libraries
 
-Building custom form components with native HTML is lightweight and gives you full control:
-
-```tsx
-<input
-  id="email"
-  type="email"
-  name="email"
-  style={{
-    width: "100%",
-    padding: "8px",
-    border: "1px solid #ccc",
-    borderRadius: "4px",
-  }}
-/>
-```
-
-When you need component libraries later (modals, dropdowns), consider lightweight alternatives like Radix UI or Headless UI rather than heavy frameworks.
+Build custom form components with native HTML - it's lightweight and gives full control. Use Radix UI or Headless UI when needed.
 
 ### Keep Styles Modular
 
-Use CSS Modules for component-specific styling:
-
+Use CSS Modules:
 ```typescript
 import styles from "./Component.module.scss";
-
-<div className={styles.wrapper}>
-  <button className={styles.button} />
-</div>
+<div className={styles.wrapper}><button className={styles.button} /></div>
 ```
 
-This prevents style conflicts and makes refactoring easy.
+### Icons & Emoji
 
-### Icons and Emoji Policy
-
-- **Frontend UI**: Use Lucide icons from the `lucide-react` package (already in `package.json`)
-- **CLI logging/console**: Avoid emojis entirely - use plain text or ASCII characters
-- **Never** use emoji in the frontend interface or CLI output
-
-This keeps the UI professional and consistent, and ensures CLI logging is compatible with all terminals and log aggregation systems.
+- **Frontend UI**: Use Lucide icons (`lucide-react`)
+- **CLI logging**: Avoid emojis - use plain text
 
 ## Design System
 
-### Visual Style
+**Visual Style:** Vercel/shadcn-inspired - black and white with strategic accent colors. Minimal gradients/shadows, subtle borders, clean typography.
 
-Nexodus follows a **Vercel/shadcn-inspired aesthetic**:
+**Theme System:** Custom light/dark using CSS variables (`src/app/globals.scss`).
 
-- **Color Palette**: Primarily black and white with minimal accent colors
-- **Accent Usage**: Tiny, strategic pops of color where necessary (CTAs, status indicators, rare items)
-- **Typography**: Clean, modern sans-serif fonts with clear hierarchy
-- **Spacing**: Generous whitespace, breathing room between elements
-- **Borders**: Subtle borders (1px, light gray/dark gray depending on theme)
-- **Shadows**: Minimal, subtle shadows for depth when needed
+**CSS Variables:**
+- **Backgrounds:** `--bg-primary`, `--bg-secondary`, `--bg-tertiary`
+- **Text:** `--text-primary`, `--text-secondary`, `--text-tertiary`
+- **Borders:** `--border-color`, `--border-hover`
+- **Accents:** `--accent-success-bg`, `--accent-error-bg`, etc.
+- **Shadows:** `--shadow-sm`, `--shadow-md`
 
-### Design Inspiration
+Always use CSS variables, never hard-coded colors.
 
-The game blends:
-- **Modern SaaS UI** (Vercel, Linear, Stripe dashboards) - clean, professional, data-focused
-- **Text-based game heritage** - information density, terminal-like precision, ASCII art sensibility
-
-### Components Should Feel:
-- Sleek and minimalist
-- Information-dense but not cluttered
-- Professional yet slightly playful
-- Fast and responsive
-- Desktop and mobile friendly
-
-### What to Avoid:
-- Bright, saturated colors everywhere
-- Heavy gradients or shadows
-- Overly rounded corners (subtle rounding is fine)
-- Comic Sans or playful fonts
-- Skeuomorphic design
-
-## Theme System
-
-Nexodus uses a custom light/dark theme system with CSS variables for consistency across all components.
-
-### Architecture
-
-1. **ThemeContext** (`src/context/ThemeContext.tsx`) - React context provider for theme state
-2. **CSS Variables** (`src/app/globals.scss`) - Theme-specific color tokens
-3. **ThemeSwitcher** (`src/components/ThemeSwitcher.tsx`) - Minimal icon-only toggle button
-
-### Using Theme Variables
-
-Always use CSS variables instead of hard-coded colors:
-
-```scss
-// Good
-.component {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-
-// Bad
-.component {
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid #e5e5e5;
-}
-```
-
-### Available CSS Variables
-
-**Backgrounds:**
-- `--bg-primary` - Main background color
-- `--bg-secondary` - Secondary background (cards, sections)
-- `--bg-tertiary` - Tertiary background (subtle highlights)
-
-**Text:**
-- `--text-primary` - Primary text color
-- `--text-secondary` - Secondary/muted text
-- `--text-tertiary` - Tertiary/disabled text
-
-**Borders:**
-- `--border-color` - Standard border color
-- `--border-hover` - Hover state border color
-
-**Accents:**
-- `--accent-success-bg` - Success message background
-- `--accent-success-text` - Success message text
-- `--accent-success-border` - Success message border
-
-**Shadows:**
-- `--shadow-sm` - Small shadow
-- `--shadow-md` - Medium shadow
-
-### Theme Switching
-
-The theme is:
-- Saved to localStorage
-- Synced with system preference on first load
-- Applied via `data-theme` attribute on `:root`
-- Accessible via `useTheme()` hook in client components
-
-### Adding the Theme Switcher
-
-Import and use the ThemeSwitcher component in any client component:
-
-```tsx
-import ThemeSwitcher from "@/components/ThemeSwitcher";
-
-<ThemeSwitcher />
-```
-
-### Creating New Components
-
-When creating new components:
-1. Use CSS variables for all colors
-2. Remove `@media (prefers-color-scheme: dark)` queries (CSS variables handle this)
-3. Test in both light and dark modes
-
-## State Management Patterns
+## State Management
 
 ### Event-Driven Updates (Preferred)
 
-For UI components that display data, prefer **event-driven updates** over polling:
-
+Update only when something changes, not via polling:
 ```tsx
-// Good: Update only when something changes
-function ResourcesSection() {
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const handleHarvestComplete = () => {
-    setRefreshTrigger(prev => prev + 1); // Trigger inventory refresh
-  };
-
-  return (
-    <>
-      <Harvester onHarvestComplete={handleHarvestComplete} />
-      <ResourceInventory key={refreshTrigger} />
-    </>
-  );
-}
-```
-
-**Why this is better:**
-- Updates happen immediately when data changes
-- No unnecessary network requests
-- No flash/loading states on refresh
-- Better UX and performance
-
-### Avoid Polling Unless Necessary
-
-```tsx
-// Bad: Auto-refresh every N seconds
-useEffect(() => {
-  const interval = setInterval(fetchData, 5000);
-  return () => clearInterval(interval);
-}, []);
-```
-
-Only use polling for:
-- Real-time collaborative features
-- Server-pushed updates you can't control
-- External data sources
-
-### Preventing Flash States
-
-When refreshing data that's already displayed:
-
-```tsx
-const fetchInventory = async () => {
-  // Only show loading on first load
-  const isFirstLoad = inventory.length === 0;
-  if (isFirstLoad) {
-    setLoading(true);
-  }
-
-  const result = await getInventory();
-  if (result.success) {
-    setInventory(result.inventory);
-  }
-
-  if (isFirstLoad) {
-    setLoading(false);
-  }
+const handleHarvestComplete = () => {
+  setRefreshTrigger(prev => prev + 1);
 };
+return <>
+  <Harvester onHarvestComplete={handleHarvestComplete} />
+  <ResourceInventory key={refreshTrigger} />
+</>;
 ```
 
-This prevents the "flash" of a loading state when data already exists.
+**Better than polling:** Immediate updates, no unnecessary requests, no loading flashes.
+
+### Prevent Flash States
+
+Only show loading on first load, not on refreshes:
+```tsx
+const isFirstLoad = inventory.length === 0;
+if (isFirstLoad) setLoading(true);
+const result = await getInventory();
+if (result.success) setInventory(result.inventory);
+if (isFirstLoad) setLoading(false);
+```
 
 ## Development Workflow
 
-### Use Docker for Local PostgreSQL
+**Docker:** `docker-compose up -d` to start PostgreSQL locally.
 
-Start the database with:
-```bash
-docker-compose up -d
-```
+**Environment variables:** Use `.env.local` (git-ignored), never commit secrets.
 
-Check status:
-```bash
-docker-compose ps
-```
+**Testing locally:** Use `npm run dev` for hot-reloading. Only run `npm run build` before commits to catch build errors.
 
-This ensures local and production environments use the same database engine (PostgreSQL 16).
-
-### Environment Variable Strategy
-
-- **`.env.local`** - Local development secrets (git-ignored)
-- **`.env.example`** - Template for team setup
-- **Never commit `.env` or secret files**
-
-Example `.env.local`:
-```
-DATABASE_URL="postgresql://nexodus:password@localhost:5432/nexodus"
-JWT_SECRET="dev-secret-change-in-production"
-```
-
-### Migrations are Safe to Version Control
-
-Database migrations in `drizzle/migrations/` should be committed to git. They're SQL files that document schema evolution and can be replayed on any environment.
-
-### Testing Changes Locally
-
-Don't rebuild after every change. The dev server hot-reloads code changes automatically. Only run `npm run build` when:
-- You expect build errors and want to catch them early
-- You're about to commit and want to verify production build succeeds
-- You've made TypeScript changes and want to verify types
-
-For testing auth flows, feature changes, or UI tweaks, use the local dev server (`npm run dev`) which rebuilds much faster on file changes.
+**Migrations:** Commit the SQL files in `drizzle/migrations/` - they document schema evolution.
 
 ## Building for Production
 
-### Always Build Locally First
+Run `npm run build` before pushing to catch type errors early. Output shows route sizes and static vs dynamic routes.
 
-Run `npm run build` before pushing:
-```bash
-npm run build
-```
+## Git Workflow
 
-This catches type errors and build issues early. The output shows route sizes and which routes are static vs dynamic.
+For major refactors, commit by feature layer so changes are reviewable and reversible.
 
-### Clean Up Unused Dependencies
+## Performance
 
-Removing Bootstrap and FontAwesome saved ~200KB. Review `package.json` quarterly and remove unused packages.
-
-## Git Workflow for Large Changes
-
-When making major refactors (like migrating to Drizzle), commit by feature layer:
-
-1. First commit: Add Drizzle infrastructure (schema, client, queries)
-2. Second commit: Rewrite auth to use Drizzle
-3. Third commit: Remove old database wrapper
-4. Fourth commit: Update components and fix build errors
-
-This makes it easier to review changes and revert individual layers if needed.
-
-## Performance Considerations
-
-### Database Indexes Matter
-
-The schema includes indexes on frequently-queried columns:
+**Database indexes:** Add indexes on frequently-queried columns.
 ```typescript
 emailIdx: index("idx_user_email").on(table.email),
-usernameIdx: index("idx_user_username").on(table.username),
 ```
 
-Add indexes for columns you query frequently to avoid full table scans.
+**Session lifetime:** 24 hours is reasonable; reduce to 1-2 hours for high-security operations.
 
-### Sessions Should Be Short-Lived
-
-24-hour sessions are reasonable for most apps. For high-security operations, reduce to 1-2 hours and require re-authentication.
-
-## Future Architecture Notes
-
-- **Lucide Icons:** Already in `package.json` for when you need an icon library
-- **Resend Email:** Infrastructure is set up; just call functions from `src/email/client.ts`
-- **Docker for Prod:** Consider extending Docker setup to production (Docker image building)
-- **Valkey/Redis:** Placeholder for real-time features; add when needed
-
-## Useful Commands Reference
+## Quick Commands
 
 ```bash
-# Development
 npm run dev              # Start dev server
 npm run build            # Test production build
-npm run lint             # Check code quality
-
-# Database
-npm run db:generate      # Generate migrations from schema
-npm run db:migrate       # Run pending migrations
-npm run db:push          # Push schema to database
+npm run db:generate      # Generate migrations
+npm run db:push          # Apply to database
 npm run db:studio        # Open Drizzle visual explorer
-
-# Docker
 docker-compose up -d     # Start PostgreSQL
-docker-compose down      # Stop PostgreSQL
-docker-compose logs -f   # View PostgreSQL logs
 ```
-
----
-
-**Last Updated:** Phase 8 - Complete migration to Next.js 15 + Drizzle + Custom UI

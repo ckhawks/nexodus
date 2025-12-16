@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getInventory } from "@/actions/resources";
 import * as LucideIcons from "lucide-react";
 import styles from "./ResourceInventory.module.scss";
@@ -27,7 +27,7 @@ export default function ResourceInventory({ refreshTrigger }: ResourceInventoryP
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchInventory = async () => {
+  const fetchInventory = useCallback(async () => {
     // Only show loading state on first load
     const isFirstLoad = inventory.length === 0;
     if (isFirstLoad) {
@@ -42,11 +42,11 @@ export default function ResourceInventory({ refreshTrigger }: ResourceInventoryP
     if (isFirstLoad) {
       setLoading(false);
     }
-  };
+  }, [inventory.length]);
 
   useEffect(() => {
     fetchInventory();
-  }, [refreshTrigger]);
+  }, [fetchInventory, refreshTrigger]);
 
   const getIcon = (iconName: string | null) => {
     if (!iconName) return null;
@@ -77,7 +77,7 @@ export default function ResourceInventory({ refreshTrigger }: ResourceInventoryP
       <h3 className={styles.title}>Resources</h3>
       <div className={styles.grid}>
         {inventory.map((item) => (
-          <div key={item.id} className={styles.resourceCard}>
+          <div key={item.resource.id} className={styles.resourceCard}>
             <div className={styles.resourceHeader}>
               <div className={styles.iconWrapper}>
                 {getIcon(item.resource.icon)}

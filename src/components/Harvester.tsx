@@ -9,7 +9,7 @@ type ResourceDispenserProps = {
   onHarvestComplete?: () => void;
 };
 
-const DISPENSING_DURATION = 5000; // 10 seconds
+const DISPENSING_DURATION = 5000;
 
 export default function ResourceDispenser({
   onHarvestComplete,
@@ -20,12 +20,10 @@ export default function ResourceDispenser({
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [message, setMessage] = useState("");
 
-  // Check cooldown status on mount
   useEffect(() => {
     checkCooldown();
   }, []);
 
-  // Dispensing progress animation
   useEffect(() => {
     if (!isDispensing) return;
 
@@ -43,7 +41,6 @@ export default function ResourceDispenser({
     return () => clearInterval(interval);
   }, [isDispensing]);
 
-  // Cooldown countdown timer
   useEffect(() => {
     if (cooldownSeconds > 0) {
       const timer = setTimeout(() => {
@@ -75,18 +72,15 @@ export default function ResourceDispenser({
 
     setIsDispensing(true);
     setDispensingProgress(0);
-    // setMessage("Dispensing resources...");
 
-    // Wait 10 seconds for dispensing animation
     setTimeout(async () => {
       const result = await harvestResources();
 
       if (result.success) {
         setMessage(result.message);
         setInCooldown(true);
-        setCooldownSeconds(5); // Set cooldown to 5 seconds
+        setCooldownSeconds(5);
 
-        // Trigger inventory refresh
         if (onHarvestComplete) {
           onHarvestComplete();
         }
@@ -117,20 +111,6 @@ export default function ResourceDispenser({
           <p className={styles.subtitle}>Starter resources</p>
         </div>
       </div>
-
-      {/* {isDispensing && (
-        <div className={styles.progressContainer}>
-          <div className={styles.progressBar}>
-            <div
-              className={styles.progressFill}
-              style={{ width: `${dispensingProgress * 100}%` }}
-            />
-          </div>
-          <p className={styles.progressText}>
-            Dispensing... {Math.round(dispensingProgress * 100)}%
-          </p>
-        </div>
-      )} */}
 
       <button
         onClick={handleDispense}

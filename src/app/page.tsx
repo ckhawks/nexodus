@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getSession } from "@/auth/lib";
 import ProfileButton from "@/components/ProfileButton";
 import ResourcesSection from "@/components/ResourcesSection";
+import BuildingsSection from "@/components/BuildingsSection";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 export default async function Home() {
@@ -47,6 +48,7 @@ export default async function Home() {
             </div>
 
             <ResourcesSection />
+            <BuildingsSection />
           </div>
         </main>
       </div>

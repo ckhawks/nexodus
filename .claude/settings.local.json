@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npm outdated:*)",
       "Bash(docker-compose exec:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

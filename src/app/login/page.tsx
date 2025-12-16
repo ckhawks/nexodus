@@ -31,7 +31,7 @@ export default async function LoginPage() {
 
         <div style={{ marginTop: "16px", textAlign: "center" }}>
           <Link href="/register" className={styles.linkText}>
-            Don't have an account? Register
+            Don&apos;t have an account? Register
           </Link>
         </div>
       </main>

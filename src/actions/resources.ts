@@ -73,7 +73,7 @@ export async function harvestResources() {
     await addResourcesToInventory(
       userId,
       randomResource.id,
-      quantity.toString()
+      quantity
     );
 
     // Update cooldown
@@ -124,6 +124,36 @@ export async function getInventory() {
       success: false,
       message: "An error occurred while fetching inventory.",
       inventory: [],
+    };
+  }
+}
+
+/**
+ * Get user's resources for affordability checking
+ */
+export async function getResourcesForUser() {
+  try {
+    const session = await getSession();
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        message: "You must be logged in to view resources.",
+        resources: [],
+      };
+    }
+
+    const inventory = await getUserInventory(session.user.id);
+
+    return {
+      success: true,
+      resources: inventory,
+    };
+  } catch (error) {
+    console.error("Error getting user resources:", error);
+    return {
+      success: false,
+      message: "An error occurred while fetching resources.",
+      resources: [],
     };
   }
 }
