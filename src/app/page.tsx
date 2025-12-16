@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { getSession } from "@/auth/lib";
 import ProfileButton from "@/components/ProfileButton";
+import ResourcesSection from "@/components/ResourcesSection";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 export default async function Home() {
   const session = await getSession();
@@ -12,23 +14,39 @@ export default async function Home() {
       <div className={styles.wrapper}>
         <main className={styles.main}>
           <div className={styles.description}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "32px",
+              }}
+            >
               <div style={{ flex: 1 }}>
                 <h1>Nexodus</h1>
                 <p className={styles.subtext}>
-                  You are
-                  <span style={{ color: "rgba(0,0,0,.8)", fontWeight: 600 }}>
+                  Welcome back,
+                  <span className={styles.username}>
                     {" "}
                     {session.user.username}
                   </span>
-                  !
+                  .
                 </p>
               </div>
-              <div style={{ flex: "0 0 auto" }}>
+              <div
+                style={{
+                  flex: "0 0 auto",
+                  display: "flex",
+                  gap: "12px",
+                  alignItems: "center",
+                }}
+              >
+                <ThemeSwitcher />
                 <ProfileButton username={session.user.username} />
               </div>
             </div>
-            ok lets go
+
+            <ResourcesSection />
           </div>
         </main>
       </div>

@@ -20,11 +20,20 @@ export default async function RegisterPage() {
         <div className={styles.description}>
           <Link href="/">
             <h1>Nexodus</h1>
-            <br />
           </Link>
+          <p className={styles.blurb}>
+            A minimalist resource management game. Gather, craft, trade, and
+            specialize your way through an industrial future.
+          </p>
         </div>
 
         <section>{!session && <RegisterComponent />}</section>
+
+        <div style={{ marginTop: "16px", textAlign: "center" }}>
+          <Link href="/login" className={styles.linkText}>
+            Already have an account? Login
+          </Link>
+        </div>
       </main>
     </div>
   );

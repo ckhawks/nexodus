@@ -3,8 +3,8 @@
 import { register } from "@/auth/lib";
 import { useActionState } from "react";
 
-import styles from "../page.module.scss";
-import Link from "next/link";
+import styles from "./RegisterComponent.module.scss";
+import pageStyles from "../page.module.scss";
 
 const initialState = {
   message: "",
@@ -16,86 +16,53 @@ export default function RegisterComponent() {
   return (
     <form action={registerAction}>
       {state?.message && (
-        <div
-          aria-live="polite"
-          style={{
-            padding: "12px",
-            marginBottom: "16px",
-            backgroundColor: "#fee",
-            border: "1px solid #fcc",
-            borderRadius: "4px",
-            color: "#c33",
-            fontSize: "0.9rem",
-          }}
-        >
+        <div aria-live="polite" className={styles.error}>
           {state?.message}
         </div>
       )}
-      <div style={{ marginBottom: "16px" }}>
-        <label htmlFor="username" style={{ display: "block", marginBottom: "4px", fontWeight: 500 }}>
+
+      <div className={styles.formGroup}>
+        <label htmlFor="username" className={styles.label}>
           Username
         </label>
         <input
           id="username"
           type="text"
           name="username"
-          style={{
-            width: "100%",
-            padding: "8px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            fontSize: "14px",
-            boxSizing: "border-box",
-          }}
+          className={styles.input}
+          required
         />
       </div>
-      <div style={{ marginBottom: "16px" }}>
-        <label htmlFor="email" style={{ display: "block", marginBottom: "4px", fontWeight: 500 }}>
+
+      <div className={styles.formGroup}>
+        <label htmlFor="email" className={styles.label}>
           Email address
         </label>
         <input
           id="email"
           type="email"
           name="email"
-          style={{
-            width: "100%",
-            padding: "8px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            fontSize: "14px",
-            boxSizing: "border-box",
-          }}
+          className={styles.input}
+          required
         />
       </div>
-      <div style={{ marginBottom: "24px" }}>
-        <label htmlFor="password" style={{ display: "block", marginBottom: "4px", fontWeight: 500 }}>
+
+      <div className={styles.formGroup}>
+        <label htmlFor="password" className={styles.label}>
           Password
         </label>
         <input
           id="password"
           type="password"
           name="password"
-          style={{
-            width: "100%",
-            padding: "8px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            fontSize: "14px",
-            boxSizing: "border-box",
-          }}
+          className={styles.input}
+          required
         />
       </div>
-      <div className={styles["login-buttons"]}>
-        <Link
-          href="/login"
-          className={`${styles["button"]} ${styles["button-secondary"]}`}
-        >
-          Login
-        </Link>
-        <button type="submit" className={styles["button"]}>
-          Register
-        </button>
-      </div>
+
+      <button type="submit" className={pageStyles.button} style={{ width: "100%" }}>
+        Register
+      </button>
     </form>
   );
 }

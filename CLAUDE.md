@@ -63,22 +63,49 @@ if (!secretKey) {
 }
 ```
 
-### Enhance Session Validation
+### Session Validation Strategy
 
-When retrieving sessions, verify the user still exists:
+**Efficient User Existence Checks:**
+
+When validating sessions, use lightweight queries that only check user existence by ID, not full user records:
 
 ```typescript
+// Good: Only queries the ID column
 const decrypted = await decrypt(session);
 if (decrypted?.user?.id) {
-  const userExists = await getUserByEmail(decrypted.user.email);
+  const userExists = await userExistsById(decrypted.user.id);
   if (!userExists) {
     (await cookies()).set("session", "", { expires: new Date(0) });
     return null;
   }
 }
+
+// Bad: Fetches entire user record including password hash
+const userExists = await getUserByEmail(decrypted.user.email);
 ```
 
-This prevents orphaned sessions for deleted accounts.
+**Why this matters:**
+- The JWT already contains user information (id, username, email)
+- Session validation happens on every authenticated request
+- Fetching full user records (especially with password hashes) is expensive
+- An ID-only query (`SELECT id FROM users WHERE id = ?`) is much faster
+
+**Implementation:**
+
+Create a lightweight query helper in `src/db/queries.ts`:
+
+```typescript
+export async function userExistsById(userId: string): Promise<boolean> {
+  const result = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return result.length > 0;
+}
+```
+
+This prevents orphaned sessions for deleted accounts while minimizing database overhead.
 
 ### Wrap Auth Operations in Try-Catch
 
@@ -138,6 +165,189 @@ This prevents style conflicts and makes refactoring easy.
 - **Never** use emoji in the frontend interface or CLI output
 
 This keeps the UI professional and consistent, and ensures CLI logging is compatible with all terminals and log aggregation systems.
+
+## Design System
+
+### Visual Style
+
+Nexodus follows a **Vercel/shadcn-inspired aesthetic**:
+
+- **Color Palette**: Primarily black and white with minimal accent colors
+- **Accent Usage**: Tiny, strategic pops of color where necessary (CTAs, status indicators, rare items)
+- **Typography**: Clean, modern sans-serif fonts with clear hierarchy
+- **Spacing**: Generous whitespace, breathing room between elements
+- **Borders**: Subtle borders (1px, light gray/dark gray depending on theme)
+- **Shadows**: Minimal, subtle shadows for depth when needed
+
+### Design Inspiration
+
+The game blends:
+- **Modern SaaS UI** (Vercel, Linear, Stripe dashboards) - clean, professional, data-focused
+- **Text-based game heritage** - information density, terminal-like precision, ASCII art sensibility
+
+### Components Should Feel:
+- Sleek and minimalist
+- Information-dense but not cluttered
+- Professional yet slightly playful
+- Fast and responsive
+- Desktop and mobile friendly
+
+### What to Avoid:
+- Bright, saturated colors everywhere
+- Heavy gradients or shadows
+- Overly rounded corners (subtle rounding is fine)
+- Comic Sans or playful fonts
+- Skeuomorphic design
+
+## Theme System
+
+Nexodus uses a custom light/dark theme system with CSS variables for consistency across all components.
+
+### Architecture
+
+1. **ThemeContext** (`src/context/ThemeContext.tsx`) - React context provider for theme state
+2. **CSS Variables** (`src/app/globals.scss`) - Theme-specific color tokens
+3. **ThemeSwitcher** (`src/components/ThemeSwitcher.tsx`) - Minimal icon-only toggle button
+
+### Using Theme Variables
+
+Always use CSS variables instead of hard-coded colors:
+
+```scss
+// Good
+.component {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+// Bad
+.component {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #e5e5e5;
+}
+```
+
+### Available CSS Variables
+
+**Backgrounds:**
+- `--bg-primary` - Main background color
+- `--bg-secondary` - Secondary background (cards, sections)
+- `--bg-tertiary` - Tertiary background (subtle highlights)
+
+**Text:**
+- `--text-primary` - Primary text color
+- `--text-secondary` - Secondary/muted text
+- `--text-tertiary` - Tertiary/disabled text
+
+**Borders:**
+- `--border-color` - Standard border color
+- `--border-hover` - Hover state border color
+
+**Accents:**
+- `--accent-success-bg` - Success message background
+- `--accent-success-text` - Success message text
+- `--accent-success-border` - Success message border
+
+**Shadows:**
+- `--shadow-sm` - Small shadow
+- `--shadow-md` - Medium shadow
+
+### Theme Switching
+
+The theme is:
+- Saved to localStorage
+- Synced with system preference on first load
+- Applied via `data-theme` attribute on `:root`
+- Accessible via `useTheme()` hook in client components
+
+### Adding the Theme Switcher
+
+Import and use the ThemeSwitcher component in any client component:
+
+```tsx
+import ThemeSwitcher from "@/components/ThemeSwitcher";
+
+<ThemeSwitcher />
+```
+
+### Creating New Components
+
+When creating new components:
+1. Use CSS variables for all colors
+2. Remove `@media (prefers-color-scheme: dark)` queries (CSS variables handle this)
+3. Test in both light and dark modes
+
+## State Management Patterns
+
+### Event-Driven Updates (Preferred)
+
+For UI components that display data, prefer **event-driven updates** over polling:
+
+```tsx
+// Good: Update only when something changes
+function ResourcesSection() {
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleHarvestComplete = () => {
+    setRefreshTrigger(prev => prev + 1); // Trigger inventory refresh
+  };
+
+  return (
+    <>
+      <Harvester onHarvestComplete={handleHarvestComplete} />
+      <ResourceInventory key={refreshTrigger} />
+    </>
+  );
+}
+```
+
+**Why this is better:**
+- Updates happen immediately when data changes
+- No unnecessary network requests
+- No flash/loading states on refresh
+- Better UX and performance
+
+### Avoid Polling Unless Necessary
+
+```tsx
+// Bad: Auto-refresh every N seconds
+useEffect(() => {
+  const interval = setInterval(fetchData, 5000);
+  return () => clearInterval(interval);
+}, []);
+```
+
+Only use polling for:
+- Real-time collaborative features
+- Server-pushed updates you can't control
+- External data sources
+
+### Preventing Flash States
+
+When refreshing data that's already displayed:
+
+```tsx
+const fetchInventory = async () => {
+  // Only show loading on first load
+  const isFirstLoad = inventory.length === 0;
+  if (isFirstLoad) {
+    setLoading(true);
+  }
+
+  const result = await getInventory();
+  if (result.success) {
+    setInventory(result.inventory);
+  }
+
+  if (isFirstLoad) {
+    setLoading(false);
+  }
+};
+```
+
+This prevents the "flash" of a loading state when data already exists.
 
 ## Development Workflow
 

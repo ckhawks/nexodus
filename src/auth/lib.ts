@@ -10,6 +10,7 @@ import {
   getUserByEmail,
   userExistsByEmail,
   userExistsByUsername,
+  userExistsById,
   createUser,
 } from "@/db/queries";
 
@@ -173,9 +174,9 @@ export async function getSession() {
 
     const decrypted = await decrypt(session);
 
-    // Verify user still exists in database
+    // Verify user still exists in database (optimized query - only checks ID)
     if (decrypted?.user?.id) {
-      const userExists = await getUserByEmail(decrypted.user.email);
+      const userExists = await userExistsById(decrypted.user.id);
       if (!userExists) {
         // User was deleted, clear the session
         (await cookies()).set("session", "", { expires: new Date(0) });

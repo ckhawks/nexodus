@@ -1,6 +1,6 @@
 "use client";
 
-import styles from "@/app/page.module.scss";
+import styles from "./ProfileButton.module.scss";
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronRight, User, LogOut } from "lucide-react";
@@ -30,56 +30,17 @@ const ProfileButton = (props: { username: string }) => {
   }, [show]);
 
   return (
-    <div ref={ref} style={{ position: "relative", display: "flex", justifyContent: "flex-end" }}>
-      <button
-        onClick={handleProfileClick}
-        className={`${styles.button} ${styles["button-secondary"]}`}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          cursor: "pointer",
-        }}
-      >
+    <div ref={ref} className={styles.profileWrapper}>
+      <button onClick={handleProfileClick} className={styles.profileButton}>
         {show ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
         <User size={16} />
-        <span style={{ color: "black", fontWeight: 500 }}>{props.username}</span>
+        <span>{props.username}</span>
       </button>
 
       {show && (
-        <div
-          style={{
-            position: "absolute",
-            top: "100%",
-            right: 0,
-            marginTop: "4px",
-            backgroundColor: "white",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-            zIndex: 1000,
-            minWidth: "150px",
-          }}
-        >
-          <div style={{ padding: "8px 0" }}>
-            <Link
-              href="/api/logout"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "8px 16px",
-                color: "black",
-                textDecoration: "none",
-                fontSize: "14px",
-              }}
-              onMouseEnter={(e) => {
-                (e.target as HTMLElement).style.backgroundColor = "#f0f0f0";
-              }}
-              onMouseLeave={(e) => {
-                (e.target as HTMLElement).style.backgroundColor = "transparent";
-              }}
-            >
+        <div className={styles.dropdown}>
+          <div className={styles.dropdownContent}>
+            <Link href="/api/logout" className={styles.dropdownLink}>
               <LogOut size={16} /> Logout
             </Link>
           </div>

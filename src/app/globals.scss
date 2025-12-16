@@ -1,3 +1,61 @@
+/* ============================================================================
+   THEME VARIABLES
+   ============================================================================ */
+
+:root[data-theme="light"] {
+  /* Backgrounds */
+  --bg-primary: #ffffff;
+  --bg-secondary: #fafafa;
+  --bg-tertiary: #f5f5f5;
+
+  /* Text colors */
+  --text-primary: #000000;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+
+  /* Borders */
+  --border-color: #e5e5e5;
+  --border-hover: #d4d4d4;
+
+  /* Accents */
+  --accent-success-bg: #f0fdf4;
+  --accent-success-text: #166534;
+  --accent-success-border: #bbf7d0;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+:root[data-theme="dark"] {
+  /* Backgrounds */
+  --bg-primary: #111111;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #222222;
+
+  /* Text colors */
+  --text-primary: #ffffff;
+  --text-secondary: #999999;
+  --text-tertiary: #666666;
+
+  /* Borders */
+  --border-color: #333333;
+  --border-hover: #444444;
+
+  /* Accents */
+  --accent-success-bg: #0a2f1c;
+  --accent-success-text: #86efac;
+  --accent-success-border: #166534;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================================
+   GLOBAL STYLES
+   ============================================================================ */
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -10,6 +68,9 @@ body {
   max-width: 100vw;
   min-height: 100vh;
   overflow-x: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 h1,
@@ -21,7 +82,7 @@ h6 {
   font-weight: 700 !important;
   line-height: unset;
   margin: unset;
-  color: black;
+  color: var(--text-primary);
 }
 
 h1 {
@@ -40,15 +101,6 @@ h4 {
   font-size: 20px;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-}
 
 a {
   color: inherit;
