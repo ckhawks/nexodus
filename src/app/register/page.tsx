@@ -4,8 +4,6 @@ import styles from "../page.module.scss";
 import { getSession } from "@/auth/lib";
 import RegisterComponent from "./RegisterComponent";
 import { redirect } from "next/navigation";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeart } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 
 export default async function RegisterPage() {

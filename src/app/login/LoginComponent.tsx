@@ -1,10 +1,9 @@
 "use client";
 
 import { login } from "@/auth/lib";
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 
 import styles from "../page.module.scss";
-import { Alert, Form } from "react-bootstrap";
 import Link from "next/link";
 
 const initialState = {
@@ -12,26 +11,62 @@ const initialState = {
 };
 
 export default function LoginComponent() {
-  const [state, loginAction] = useFormState(login, initialState);
+  const [state, loginAction] = useActionState(login, initialState);
 
   return (
     <form action={loginAction}>
       {state?.message && (
-        <p aria-live="polite">
-          <Alert variant="danger" style={{ fontSize: "0.9rem" }}>
-            {state?.message}
-          </Alert>
-        </p>
+        <div
+          aria-live="polite"
+          style={{
+            padding: "12px",
+            marginBottom: "16px",
+            backgroundColor: "#fee",
+            border: "1px solid #fcc",
+            borderRadius: "4px",
+            color: "#c33",
+            fontSize: "0.9rem",
+          }}
+        >
+          {state?.message}
+        </div>
       )}
-      <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
-        <Form.Label>Email address</Form.Label>
-        <Form.Control type="email" name="email" placeholder="" />
-      </Form.Group>
-      <Form.Group className="mb-3" controlId="exampleForm.ControlInput2">
-        <Form.Label>Password</Form.Label>
-        <Form.Control type="password" name="password" placeholder="" />
-      </Form.Group>
-      <br />
+      <div style={{ marginBottom: "16px" }}>
+        <label htmlFor="email" style={{ display: "block", marginBottom: "4px", fontWeight: 500 }}>
+          Email address
+        </label>
+        <input
+          id="email"
+          type="email"
+          name="email"
+          style={{
+            width: "100%",
+            padding: "8px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            fontSize: "14px",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
+      <div style={{ marginBottom: "24px" }}>
+        <label htmlFor="password" style={{ display: "block", marginBottom: "4px", fontWeight: 500 }}>
+          Password
+        </label>
+        <input
+          id="password"
+          type="password"
+          name="password"
+          style={{
+            width: "100%",
+            padding: "8px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            fontSize: "14px",
+            boxSizing: "border-box",
+          }}
+        />
+      </div>
       <div className={styles["login-buttons"]}>
         <Link
           href="/register"
@@ -40,7 +75,7 @@ export default function LoginComponent() {
           Register
         </Link>
         <button type="submit" className={styles["button"]}>
-          {/* <FontAwesomeIcon icon={faPlus} />  */} Login
+          Login
         </button>
       </div>
     </form>

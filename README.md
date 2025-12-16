@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Nexodus
 
-## Getting Started
+A minimalist interactive game where players gather, craft, and trade resources while shaping their unique virtual experience.
 
-First, run the development server:
+## Tech Stack
+
+- **Frontend:** Next.js 15, React, TypeScript, CSS Modules (SCSS)
+- **Backend:** Next.js Server Actions, API Routes
+- **Database:** PostgreSQL 16, Drizzle ORM
+- **Auth:** JWT in HTTP-only cookies, bcrypt password hashing
+- **Icons:** Lucide React
+- **Deployment:** Self-hosted VPS (PostgreSQL), Next.js (Vercel or custom)
+
+## Quick Start
+
+See [guides/SETUP.md](guides/SETUP.md) for detailed local development setup.
 
 ```bash
+npm install
+docker-compose up -d
+npm run db:push
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```
+src/
+├── app/              # Next.js App Router (pages, layouts, API routes)
+├── auth/             # Authentication (JWT, password hashing)
+├── components/       # React components
+├── db/
+│   ├── schema.ts     # Drizzle ORM schema
+│   ├── client.ts     # Database client
+│   └── queries.ts    # Query helpers
+├── lib/              # Utilities
+└── email/            # Email templates (future)
 
-## Learn More
+guides/
+├── SETUP.md          # Local development setup
+└── SCALABILITY.md    # Code quality and scaling considerations
 
-To learn more about Next.js, take a look at the following resources:
+drizzle/
+└── migrations/       # Auto-generated SQL migrations
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Database Schema
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### Users Table
+- `id` (uuid, primary key)
+- `username` (varchar, unique, indexed)
+- `email` (varchar, unique, indexed)
+- `password` (varchar, bcrypt hashed)
+- `created_at` (timestamp)
 
-## Deploy on Vercel
+## Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Dev Server:** `npm run dev` (hot-reload on changes)
+- **Build:** `npm run build` (only before committing or expecting errors)
+- **Lint:** `npm run lint`
+- **Database:** See [guides/SETUP.md](guides/SETUP.md)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Documentation
+
+- **For you (Claude):** See [CLAUDE.md](CLAUDE.md) for patterns and tips
+- **Setup & troubleshooting:** See [guides/SETUP.md](guides/SETUP.md)
+- **Scaling & code quality:** See [guides/SCALABILITY.md](guides/SCALABILITY.md)

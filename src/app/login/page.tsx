@@ -1,10 +1,8 @@
 "use server";
 
 import styles from "../page.module.scss";
-import { getSession, logout } from "@/auth/lib";
+import { getSession } from "@/auth/lib";
 import LoginComponent from "./LoginComponent";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHeart } from "@fortawesome/free-solid-svg-icons";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 
